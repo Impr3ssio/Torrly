@@ -1,0 +1,5 @@
+# Outpur directory
+./out/*
+
+# Any build files generated
+*.exe
