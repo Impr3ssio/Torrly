@@ -14,12 +14,11 @@ func NewTorrly(mag string) *torrly {
 	return &torrly{magnet: mag}
 }
 
-func (t *torrly) Run() error {
+func (t *torrly) Run() {
 	d, err := bencode.DecodeBencode(t.magnet)
 	if err != nil {
-		return err
+		fmt.Println(err)
+		return
 	}
-
 	fmt.Println(d)
-	return nil
 }

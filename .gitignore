@@ -3,3 +3,6 @@
 
 # Any build files generated
 *.exe
+
+# Any torrent files for testing
+*.torrent
