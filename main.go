@@ -1,10 +1,23 @@
 package main
 
-import "github.com/AcidOP/torrly/torrent"
+import (
+	"fmt"
+
+	"github.com/AcidOP/torrly/torrent"
+)
 
 func main() {
-	encoded := "izze"
+	t, err := torrent.NewTorrentFromFile("./test.torrent")
+	if err != nil {
+		panic(err)
+	}
 
-	torrly := torrent.NewTorrly(encoded)
-	torrly.Run()
+	t.ViewTorrent()
+
+	peers, err := t.GetPeerList()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Peers:", peers)
 }

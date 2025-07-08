@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strconv"
 )
 
@@ -25,7 +26,6 @@ func DecodeBencode(input string) (BValue, error) {
 	}
 
 	r := bytes.NewReader([]byte(input))
-
 	if r.Len() == 0 {
 		return nil, ErrUnexpectedEOF
 	}
@@ -200,4 +200,55 @@ func extractDictionary(r *bytes.Reader) (map[string]BValue, error) {
 		dict[keyStr] = val
 	}
 	return dict, nil
+}
+
+func Encode(v BValue) ([]byte, error) {
+	var buf bytes.Buffer
+	err := encode(&buf, v)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func encode(w *bytes.Buffer, v BValue) error {
+	switch val := v.(type) {
+	case string:
+		_, err := fmt.Fprintf(w, "%d:%s", len(val), val)
+		return err
+	case int:
+		_, err := fmt.Fprintf(w, "i%de", val)
+		return err
+	case []BValue:
+		w.WriteByte('l')
+		for _, item := range val {
+			if err := encode(w, item); err != nil {
+				return err
+			}
+		}
+		w.WriteByte('e')
+		return nil
+	case map[string]BValue:
+		w.WriteByte('d')
+
+		keys := make([]string, 0, len(val))
+		for k := range val {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			if err := encode(w, k); err != nil {
+				return err
+			}
+			if err := encode(w, val[k]); err != nil {
+				return err
+			}
+		}
+
+		w.WriteByte('e')
+		return nil
+	default:
+		return fmt.Errorf("unsupported bencode type: %T", v)
+	}
 }
