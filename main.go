@@ -1,10 +1,6 @@
 package main
 
-import (
-	"fmt"
-
-	"github.com/AcidOP/torrly/torrent"
-)
+import "github.com/AcidOP/torrly/torrent"
 
 func main() {
 	t, err := torrent.NewTorrentFromFile("./test.torrent")
@@ -13,11 +9,5 @@ func main() {
 	}
 
 	t.ViewTorrent()
-
-	peers, err := t.GetPeerList()
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Peers:", peers)
+	t.StartDownload()
 }

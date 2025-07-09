@@ -1,5 +1,7 @@
 package types
 
+import "net"
+
 // TorrentMeta represents the metadata of a torrent file.
 // All the properties are required to be present in the torrent file.
 // Taken from https://wiki.theory.org/BitTorrentSpecification#Bencoding
@@ -14,5 +16,17 @@ type Info struct {
 	Length      int        // length of the file in bytes (integer)
 	InfoHash    []byte     // SHA1 hash of the info dictionary, used to verify the integrity of the torrent metadata.
 	PieceHashes [][20]byte // Array of SHA1 hashes for each piece of the file
-	PieceLength int        // The length of each piece in bytes (integer). Commonly 256 KiB.
+	PieceLength int        // The length of each piece in bytes (integer). Most commonly 256 KiB.
+}
+
+// Response from tracker after announcing to the tracker
+type TrackerResponse struct {
+	Interval uint16 // Integer indicating how often the client should re-announce to the tracker.
+	Peers    []Peer // List of peers that the client can connect to for downloading the torrent.
+}
+
+type Peer struct {
+	IP     net.IP // IP address of the peer in binary format.
+	Port   int    // Port number of the peer to connect to.
+	PeerID string // Unique identifier for the peer, usually a 20-byte string.
 }

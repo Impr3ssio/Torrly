@@ -36,11 +36,8 @@ func buildTrackerURL(t Torrent) (string, error) {
 
 // Announce to the tracker to get a list of peers
 // Returns a map of peers with their IP addresses and ports
-// The response is bencoded, so we need to decode it
-// The response will be a dictionary with the following keys
-// "interval" (int), "peers" (list of dictionaries with "ip" and "port")
-func (t *Torrent) GetPeerList() (any, error) {
-	trackerURL, err := buildTrackerURL(*t)
+func getTrackerResponse(t Torrent) ([]byte, error) {
+	trackerURL, err := buildTrackerURL(t)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +57,17 @@ func (t *Torrent) GetPeerList() (any, error) {
 		return nil, fmt.Errorf("failed to read response: %v", err)
 	}
 
-	decoded, err := bencode.DecodeBencode(string(data))
+	return data, nil
+}
+
+// Returns a list of peers from the tracker
+func (t *Torrent) RequestPeers() (bencode.BValue, error) {
+	res, err := getTrackerResponse(*t)
+	if err != nil {
+		return nil, err
+	}
+
+	decoded, err := bencode.DecodeBencode(string(res))
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode tracker response: %v", err)
 	}

@@ -3,27 +3,31 @@ package parser
 import (
 	"crypto/sha1"
 	"errors"
+	"net"
 
 	"github.com/AcidOP/torrly/bencode"
 	"github.com/AcidOP/torrly/types"
 )
 
+// the map kept repeating, so defined a new type for my sanity
+type BDict = map[string]bencode.BValue
+
 // Parse bencoded torrent metadata into structured data
 func ParseTorrentMeta(bcode bencode.BValue) (*types.TorrentMeta, error) {
 	// Dictionary to hold the torrent metadata
 	// Torrent root must be a dictionary
-	rootMap, ok := bcode.(map[string]bencode.BValue)
+	root, ok := bcode.(BDict)
 	if !ok {
 		return nil, errors.New("torrent root is not a dictionary")
 	}
 
-	announce, ok := rootMap["announce"].(string)
+	announce, ok := root["announce"].(string)
 	if !ok {
 		return nil, errors.New("missing or invalid announce field")
 	}
 
 	// Info is another dictionary within the torrent metadata
-	infoDict, ok := rootMap["info"].(map[string]bencode.BValue)
+	infoDict, ok := root["info"].(BDict)
 	if !ok {
 		return nil, errors.New("missing or invalid info dictionary")
 	}
@@ -36,7 +40,7 @@ func ParseTorrentMeta(bcode bencode.BValue) (*types.TorrentMeta, error) {
 		return nil, errors.New("failed to re-encode info dict to bencode")
 	}
 
-	// SHA-1 hash to verify the integrity of the torrent metadata
+	// SHA-1 hash the `info` to verify the integrity of the torrent metadata
 	infoHash := sha1.Sum(infoRawBytes)
 
 	name, _ := infoDict["name"].(string)
@@ -70,6 +74,56 @@ func ParseTorrentMeta(bcode bencode.BValue) (*types.TorrentMeta, error) {
 			PieceHashes: pieceHashes,
 		},
 	}, nil
+}
+
+// Take a tracker response and return a dictionary of peers
+func ParsePeers(tResponse bencode.BValue) ([]types.Peer, error) {
+	// Root dictionary of peers
+	root, ok := tResponse.(BDict)
+	if !ok {
+		return nil, errors.New("tracker response is not a valid dictionary")
+	}
+
+	// Extract the `peers` key from the response
+	peerListRaw, ok := root["peers"]
+	if !ok {
+		return nil, errors.New("missing `peers` key")
+	}
+
+	peerList, ok := peerListRaw.([]bencode.BValue)
+	if !ok {
+		return nil, errors.New("`peers` is not a list")
+	}
+
+	var peers []types.Peer
+
+	// Convert from BValue to Peer types
+	for _, raw := range peerList {
+		d, ok := raw.(BDict)
+		if !ok {
+			return nil, errors.New("peer entry is not a dictionary")
+		}
+
+		ip, ok := d["ip"].(string)
+		if !ok {
+			return nil, errors.New("invalid ip address")
+		}
+
+		port, ok := d["port"].(int)
+		if !ok {
+			return nil, errors.New("peer missing or invalid 'port'")
+		}
+
+		// Some clients do not have a peer ID (Optionally ignore this)
+		peerId, _ := d["peer id"].(string)
+
+		peers = append(peers, types.Peer{
+			IP:     net.ParseIP(ip),
+			Port:   port,
+			PeerID: peerId,
+		})
+	}
+	return peers, nil
 }
 
 func splitChunks(data []byte) ([][]byte, error) {
