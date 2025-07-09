@@ -19,12 +19,6 @@ type Info struct {
 	PieceLength int        // The length of each piece in bytes (integer). Most commonly 256 KiB.
 }
 
-// Response from tracker after announcing to the tracker
-type TrackerResponse struct {
-	Interval uint16 // Integer indicating how often the client should re-announce to the tracker.
-	Peers    []Peer // List of peers that the client can connect to for downloading the torrent.
-}
-
 type Peer struct {
 	IP     net.IP // IP address of the peer in binary format.
 	Port   int    // Port number of the peer to connect to.

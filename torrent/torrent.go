@@ -33,18 +33,24 @@ func NewTorrentFromFile(path string) (*Torrent, error) {
 // Visualize information about the torrent.
 // (e.g. announce URL, file name, size, piece length, number of pieces, info hash)
 func (t *Torrent) ViewTorrent() {
-	fmt.Println()
-	fmt.Println()
+	var displaySize string
+	s := t.Info.Length / (1024 * 1024)
 
-	fmt.Printf("Announce: %s\n", t.Announce)
+	// Format the size in GB, MB, or KB
+	if s >= 1024 {
+		displaySize = fmt.Sprintf("%.2f GB", float64(s)/1024)
+	} else if s >= 1 {
+		displaySize = fmt.Sprintf("%.2f MB", float64(s))
+	} else {
+		displaySize = fmt.Sprintf("%d KB", t.Info.Length/1024)
+	}
+
+	fmt.Printf("\n\nAnnounce: %s\n", t.Announce)
 	fmt.Printf("File name: %s\n", t.Info.Name)
-	fmt.Printf("File size: %d MB\n", t.Info.Length/(1024*1024))
+	fmt.Printf("File size: %s\n", displaySize)
 	fmt.Printf("Piece length: %d KB\n", t.Info.PieceLength/1024)
 	fmt.Printf("Num pieces: %d\n", t.Info.PieceLength/20)
 	fmt.Printf("Info Hash: %x\n", t.Info.InfoHash)
-
-	fmt.Println()
-	fmt.Println()
 }
 
 func (t *Torrent) StartDownload() {
@@ -53,11 +59,11 @@ func (t *Torrent) StartDownload() {
 		panic(err)
 	}
 
-	_, err = parser.ParsePeers(d)
+	peers, err := parser.ParsePeers(d)
 	if err != nil {
 		panic(err)
 	}
-
+	fmt.Printf("\nFound %d peers\n", len(peers))
 }
 
 // Takes a path as an argument and checks if the file is a .torrent file
