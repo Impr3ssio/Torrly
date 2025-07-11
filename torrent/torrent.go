@@ -120,8 +120,7 @@ func metaFromFile(f *os.File) (Torrent, error) {
 	}
 
 	bt := bTorrent{}
-	err := bencode.Unmarshal(f, &bt)
-	if err != nil {
+	if err := bencode.Unmarshal(f, &bt); err != nil {
 		return Torrent{}, errors.New("failed to parse torrent file: " + err.Error())
 	}
 

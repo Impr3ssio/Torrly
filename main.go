@@ -20,6 +20,4 @@ func main() {
 
 	t2.ViewTorrent()
 	t2.StartDownload()
-
-	// t.StartDownload()
 }
