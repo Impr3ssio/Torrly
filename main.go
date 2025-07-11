@@ -1,13 +1,25 @@
 package main
 
-import "github.com/AcidOP/torrly/torrent"
+import (
+	"github.com/AcidOP/torrly/torrent"
+)
 
 func main() {
-	t, err := torrent.NewTorrentFromFile("./debian.torrent")
+	t1, err := torrent.NewTorrentFromFile("./debian.torrent")
 	if err != nil {
 		panic(err)
 	}
 
-	t.ViewTorrent()
-	t.StartDownload()
+	t1.ViewTorrent()
+	t1.StartDownload()
+
+	t2, err := torrent.NewTorrentFromFile("./test.torrent")
+	if err != nil {
+		panic(err)
+	}
+
+	t2.ViewTorrent()
+	t2.StartDownload()
+
+	// t.StartDownload()
 }
